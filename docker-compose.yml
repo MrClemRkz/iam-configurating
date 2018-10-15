@@ -1,0 +1,46 @@
+version: '3'
+
+services:
+  wso2is:
+    build: 
+      context: ./wso2is
+    image: wso2is-exldap
+    container_name: wso2is
+    ports:
+      - "9443:9443"
+    entrypoint: /home/wso2carbon/init.sh
+
+  openldap:
+    build:
+      context: ./openldap
+    image: external-openldap
+    container_name: openldap
+    environment:
+      LDAP_DOMAIN: "wso2.com"
+    tty: true
+    stdin_open: true
+    ports:
+      - "389:389"
+      - "636:636"
+
+      # cn=admin,dc=wso2,dc=com
+
+  phpldapadmin:
+    image: osixia/phpldapadmin:latest
+    container_name: phpldapadmin
+    environment:
+      PHPLDAPADMIN_LDAP_HOSTS: "openldap"
+      PHPLDAPADMIN_HTTPS: "false"
+    ports:
+      - "8080:80"
+    depends_on:
+      - openldap # service name
+
+  mysql:
+    image: mysql/mysql-server:5.7
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "toor"
+      MYSQL_DATABASE: "wso2is"
+    ports:
+      - "3306:3306"
